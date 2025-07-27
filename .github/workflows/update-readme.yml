@@ -1,0 +1,43 @@
+name: Update README with Contributions
+
+on:
+  schedule:
+    # Run every day at 6:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        
+    - name: Update README
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        KDE_GITLAB_TOKEN: ${{ secrets.KDE_GITLAB_TOKEN }}
+      run: |
+        python update_readme.py
+        
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add README.md
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Update README with latest contributions"
+          git push
+        fi
